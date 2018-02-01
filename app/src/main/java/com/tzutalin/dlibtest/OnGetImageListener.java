@@ -27,6 +27,8 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.Path;
+import android.graphics.PathMeasure;
 import android.graphics.Point;
 import android.graphics.Rect;
 import android.media.Image;
@@ -235,15 +237,22 @@ public class OnGetImageListener implements OnImageAvailableListener {
         mInferenceHandler.post(
                 new Runnable() {
                     private float getFaceRotation(ArrayList<Point> landmarks) {
-
-                        Point point8 = landmarks.get(8);
-
-                        return 0;
+                        return (float) angleOf(landmarks.get(8), getMiddlePoint(landmarks.get(21), landmarks.get(22)));
                     }
 
-                    public double angleOf(Point p1, Point p2) {
-                        final double result = Math.toDegrees(Math.atan2(p1.y - p2.y, p2.x - p1.x));
-                        return ((result < 0) ? (360d + result) : result) - 270;
+                    private Point getMiddlePoint(Point point1, Point point2) {
+                        return new Point((point1.x + point2.x) / 2, point1.y + point2.y / 2);
+                    }
+
+
+                    public double angleOf(Point centerPt, Point targetPt) {
+                        double theta = Math.atan2(targetPt.y - centerPt.y, targetPt.x - centerPt.x);
+                        theta += Math.PI / 2.0;
+                        double angle = Math.toDegrees(theta);
+                        if (angle < 0) {
+                            angle += 360;
+                        }
+                        return angle;
                     }
 
                     @Override
@@ -262,15 +271,16 @@ public class OnGetImageListener implements OnImageAvailableListener {
                             long endTime = System.currentTimeMillis();
                             mTransparentTitleView.setText("Time cost: " + String.valueOf(endTime - startTime) + "millis");
                         }
-
+                        String moreinfo = "";
                         // Draw on bitmap
                         if (results.size() != 0) {
                             for (final VisionDetRet ret : results) {
                                 ArrayList<Point> landmarks = ret.getFaceLandmarks();
                                 float resizeRatio = 4.5f;
                                 Canvas canvas = new Canvas(mInversedBipmap);
+                                moreinfo = "Rot:" + getFaceRotation(landmarks);
                                 Rect rect = new Rect((int) (ret.getLeft() * resizeRatio), (int) (ret.getTop() * resizeRatio), (int) (ret.getRight() * resizeRatio), (int) (ret.getBottom() * resizeRatio));
-                                canvas.rotate(getFaceRotation(landmarks), rect.centerX(), rect.centerY());
+                                //canvas.rotate(getFaceRotation(landmarks), rect.centerX(), rect.centerY());
                                 canvas.drawRect(rect, mFaceLandmardkPaint);
 
                                 for (int i = 0; i < landmarks.size(); i++) {
@@ -283,6 +293,7 @@ public class OnGetImageListener implements OnImageAvailableListener {
                         }
 
                         mframeNum++;
+                        mWindow.setMoreInformation(moreinfo);
                         mWindow.setRGBBitmap(mInversedBipmap);
                         mIsComputing = false;
                     }
