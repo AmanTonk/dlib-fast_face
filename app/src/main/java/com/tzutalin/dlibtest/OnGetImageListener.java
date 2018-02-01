@@ -234,8 +234,11 @@ public class OnGetImageListener implements OnImageAvailableListener {
 
         mInferenceHandler.post(
                 new Runnable() {
-                    private float getFaceRotation(VisionDetRet ret) {
-                        return 45;
+                    private float getFaceRotation(ArrayList<Point> landmarks) {
+
+                        Point point8 = landmarks.get(8);
+
+                        return 0;
                     }
 
                     @Override
@@ -258,16 +261,19 @@ public class OnGetImageListener implements OnImageAvailableListener {
                         // Draw on bitmap
                         if (results.size() != 0) {
                             for (final VisionDetRet ret : results) {
+                                ArrayList<Point> landmarks = ret.getFaceLandmarks();
                                 float resizeRatio = 4.5f;
                                 Canvas canvas = new Canvas(mInversedBipmap);
-                                canvas.drawRect(ret.getLeft() * resizeRatio, ret.getTop() * resizeRatio, ret.getRight() * resizeRatio, ret.getBottom() * resizeRatio, mFaceLandmardkPaint);
+                                Rect rect = new Rect((int) (ret.getLeft() * resizeRatio), (int) (ret.getTop() * resizeRatio), (int) (ret.getRight() * resizeRatio), (int) (ret.getBottom() * resizeRatio));
+                                canvas.rotate(getFaceRotation(landmarks), rect.centerX(), rect.centerY());
+                                canvas.drawRect(rect, mFaceLandmardkPaint);
 
-                                /* ArrayList<Point> landmarks = ret.getFaceLandmarks();
-                                for (Point point : landmarks) {
+                                for (int i = 0; i < landmarks.size(); i++) {
+                                    Point point = landmarks.get(i);
                                     int pointX = (int) (point.x * resizeRatio);
                                     int pointY = (int) (point.y * resizeRatio);
-                                    canvas.drawCircle(pointX, pointY, 4, mFaceLandmardkPaint);
-                                }*/
+                                    canvas.drawText("" + i, pointX, pointY, mFaceLandmardkPaint);
+                                }
                             }
                         }
 
