@@ -241,6 +241,11 @@ public class OnGetImageListener implements OnImageAvailableListener {
                         return 0;
                     }
 
+                    public double angleOf(Point p1, Point p2) {
+                        final double result = Math.toDegrees(Math.atan2(p1.y - p2.y, p2.x - p1.x));
+                        return ((result < 0) ? (360d + result) : result) - 270;
+                    }
+
                     @Override
                     public void run() {
 
